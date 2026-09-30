@@ -10,6 +10,8 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./site-config');
 const cityData = require('./city-data');
+const articles = require('./blog-data');
+const { renderIconMeta, readTimeFor } = require('./template');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -30,20 +32,48 @@ function linkPhone(text) {
 
 const NEARBY_COUNT = 5;
 
+// Hrefs keep their leading slash so they resolve from any folder depth.
 function renderAreaPills(currentSlug) {
   return config.cities.map(c => {
-    const slug = c.file === '/' ? '/' : c.file.replace(/^\//, '');
-    const cls = (c.file !== '/' && slug === currentSlug) ? 'area-pill current' : 'area-pill';
-    const href = c.file === '/' ? '/' : slug;
-    return `        <a href="${href}" class="${cls}">${escapeHtml(c.name)}</a>`;
+    const cls = c.file === `/${currentSlug}` ? 'area-pill current' : 'area-pill';
+    return `        <a href="${c.file}" class="${cls}">${escapeHtml(c.name)}</a>`;
   }).join('\n');
 }
 
 function renderFooterAreas() {
-  return config.cities.map(c => {
-    const href = c.file === '/' ? '/' : c.file.replace(/^\//, '');
-    return `            <li><a href="${href}">${escapeHtml(c.name)}</a></li>`;
+  return config.cities
+    .map(c => `            <li><a href="${c.file}">${escapeHtml(c.name)}</a></li>`)
+    .join('\n');
+}
+
+// Evergreen guides linked from every city page. Titles/categories come
+// from blog-data.js so they can't drift from the articles themselves.
+const GUIDE_SLUGS = [
+  'home-inspection-cost-louisville',
+  'what-does-a-home-inspection-cover',
+  'how-to-prepare-your-home-for-inspection'
+];
+
+function renderHelpfulGuides() {
+  const cards = GUIDE_SLUGS.map(slug => {
+    const a = articles.find(x => x.slug === slug);
+    if (!a) throw new Error(`Helpful Guides: blog slug "${slug}" not found in blog-data.js`);
+    return `        <a href="/blog/${a.slug}" class="blog-card">
+          <span class="blog-card-cat">${escapeHtml(a.category)}</span>
+          <h3>${escapeHtml(a.title)}</h3>
+          <p>${escapeHtml(a.metaDescription)}</p>
+          <div class="blog-card-meta"><span>${readTimeFor(a)} min read</span></div>
+        </a>`;
   }).join('\n');
+  return `  <section class="section guides-section">
+    <div class="container text-center">
+      <h2 class="section-title">Helpful Guides</h2>
+      <p class="section-sub">Straight answers on pricing, what an inspection covers, and how to get ready</p>
+      <div class="blog-grid guides-grid">
+${cards}
+      </div>
+    </div>
+  </section>`;
 }
 
 function nearbyCities(currentSlug) {
@@ -107,6 +137,16 @@ function renderCityPage(city) {
     }))
   };
 
+  // Mirrors the visible breadcrumb: Home › Home Inspection in <City>
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": `${config.domain}/` },
+      { "@type": "ListItem", "position": 2, "name": `Home Inspection in ${name}, ${stateAbbr}`, "item": url }
+    ]
+  };
+
   const localBusinessSchema = `  {
     "@context": "https://schema.org",
     "@type": "HomeAndConstructionBusiness",
@@ -166,6 +206,8 @@ ${areaServed}
   <meta name="geo.region" content="US-${stateAbbr}" />
   <meta name="geo.placename" content="${escapeHtml(name)}" />
 
+  ${renderIconMeta()}
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
@@ -177,6 +219,10 @@ ${localBusinessSchema}
 
   <script type="application/ld+json">
   ${JSON.stringify(faqSchema, null, 2)}
+  </script>
+
+  <script type="application/ld+json">
+  ${JSON.stringify(breadcrumbSchema, null, 2)}
   </script>
 </head>
 <body>
@@ -416,6 +462,8 @@ ${faqItems}
       </div>
     </div>
   </section>
+
+${renderHelpfulGuides()}
 
   <section class="cta-banner">
     <div class="container">

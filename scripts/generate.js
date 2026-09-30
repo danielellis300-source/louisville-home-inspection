@@ -92,6 +92,8 @@ function generateRedirects() {
 
   articles.forEach(a => lines.push(`/blog/${a.slug}.html /blog/${a.slug} 301`));
   lines.push('/blog/index.html /blog/ 301');
+  // Bare /blog otherwise gets Cloudflare's default 307 to /blog/.
+  lines.push('/blog /blog/ 301');
 
   writeFile(path.join(ROOT, '_redirects'), lines.join('\n') + '\n');
 }

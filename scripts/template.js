@@ -26,6 +26,18 @@ function readTimeFor(article) {
   return Math.max(1, Math.round(words / 200));
 }
 
+// Favicon + social preview tags, shared by every generated page (and
+// mirrored by hand in index.html). Files are written by make-icons.ps1.
+function renderIconMeta() {
+  return `<link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <meta property="og:image" content="${config.domain}/assets/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="${config.domain}/assets/og-image.png" />`;
+}
+
 function renderHead({ title, description, canonicalPath, ogTitle, ogDescription, extraSchema }) {
   const canonical = `${config.domain}${canonicalPath}`;
   return `<meta charset="UTF-8" />
@@ -42,6 +54,8 @@ function renderHead({ title, description, canonicalPath, ogTitle, ogDescription,
   <meta property="og:type" content="article" />
   <meta name="geo.region" content="US-${config.addressRegion}" />
   <meta name="geo.placename" content="${config.addressLocality}" />
+
+  ${renderIconMeta()}
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -87,10 +101,9 @@ function renderBreadcrumb(items) {
 }
 
 function renderFooter() {
-  const cityLinks = config.cities.map(c => {
-    const href = c.file === '/' ? '/' : c.file.replace(/^\//, '');
-    return `<li><a href="${href}">${escapeHtml(c.name)}</a></li>`;
-  }).join('\n            ');
+  const cityLinks = config.cities
+    .map(c => `<li><a href="${c.file}">${escapeHtml(c.name)}</a></li>`)
+    .join('\n            ');
   return `  <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -355,4 +368,4 @@ ${renderMenuScript()}
 `;
 }
 
-module.exports = { renderArticlePage, renderBlogIndexPage, readTimeFor, formatDate };
+module.exports = { renderArticlePage, renderBlogIndexPage, readTimeFor, formatDate, renderIconMeta };

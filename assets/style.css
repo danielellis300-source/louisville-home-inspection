@@ -354,7 +354,8 @@ a { color: inherit; text-decoration: none; }
   border-radius: 100px;
   margin-bottom: 14px;
 }
-.blog-card h2 {
+.blog-card h2,
+.blog-card h3 {
   font-size: 1.12rem;
   font-weight: 800;
   color: var(--dark);
@@ -364,6 +365,10 @@ a { color: inherit; text-decoration: none; }
 .blog-card p { font-size: .9rem; color: #718096; line-height: 1.65; margin-bottom: 16px; flex-grow: 1; }
 .blog-card-meta { font-size: .78rem; color: #999; display: flex; gap: 10px; align-items: center; }
 .blog-card-link { font-size: .88rem; font-weight: 700; color: var(--brand); margin-top: 14px; }
+
+/* ── City page "Helpful Guides" (reuses .blog-grid / .blog-card) ── */
+.guides-section { background: var(--light-bg); }
+.guides-grid { text-align: left; }
 
 /* ── Article layout ── */
 .article-header { background: #fff; padding: 44px 0 8px; }
