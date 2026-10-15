@@ -164,7 +164,7 @@ function renderMenuScript() {
 function renderCta() {
   return `      <div class="article-cta">
         <h3>Get a Free Inspection Quote</h3>
-        <p>Serving ${escapeHtml(config.addressLocality)} and the Kentuckiana metro — call now or request a quote online.</p>
+        <p>Our <a href="/">Louisville home inspectors</a> serve ${escapeHtml(config.addressLocality)} and the Kentuckiana metro — call now or request a quote online.</p>
         <div class="cta-actions">
           <a href="tel:${config.phoneTel}" class="btn btn-primary">Call ${config.phoneDisplay}</a>
           <a href="/#quote" class="btn btn-outline">Request a Free Quote</a>

@@ -444,7 +444,7 @@ ${localBusinessSchema}
   <section class="section areas-section" id="areas">
     <div class="container text-center">
       <h2 class="section-title">All Areas We Serve</h2>
-      <p class="section-sub">We cover ${escapeHtml(name)} and the greater Louisville metro on both sides of the river. Not sure if we reach you? Just call ${config.phoneDisplay}.</p>
+      <p class="section-sub">We cover ${escapeHtml(name)} as part of our <a href="/">Louisville home inspection</a> service area, which reaches both sides of the river. Not sure if we reach you? Just call ${config.phoneDisplay}.</p>
       <div class="areas-grid">
 ${renderAreaPills(slug)}
       </div>
