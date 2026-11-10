@@ -85,14 +85,14 @@
       <a href="/" class="logo">Louisville<span>Home</span> Inspection Services</a>
       <div class="header-right">
         <div class="header-phone">Call us: <a href="tel:3175370940">(317) 537-0940</a></div>
-        <a href="/#quote" class="btn btn-primary">Free Quote</a>
+        <a href="/#quote" class="btn btn-primary">Book Now</a>
         <div class="menu-wrap">
           <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuDropdown">&#9776; Menu</button>
           <div class="menu-dropdown" id="menuDropdown" role="menu">
             <a href="/">Home</a>
             <a href="/#services">Services</a>
             <a href="/#areas">Service Areas</a>
-            <a href="/#quote">Get a Quote</a>
+            <a href="/#quote">Book Online</a>
             <a href="/blog/">Blog</a>
           </div>
         </div>
@@ -134,11 +134,11 @@
       <p>The EPA action level is <strong>4.0 pCi/L</strong>. Results below that are considered acceptable, though the EPA notes there's no truly "safe" level and mitigation can be worth considering between 2 and 4 pCi/L, especially for a household with children or anyone with respiratory concerns. Results above 4.0 pCi/L warrant a radon mitigation system, which typically costs $800–$1,500 installed in the Louisville area and can often be negotiated into the purchase agreement as a seller-paid item.</p>
 
       <div class="article-cta">
-        <h3>Get a Free Inspection Quote</h3>
-        <p>Our <a href="/">Louisville home inspectors</a> serve Louisville and the Kentuckiana metro — call now or request a quote online.</p>
+        <h3>Need a Louisville Home Inspection?</h3>
+        <p>Fixed prices from $299, same-day reports, and Kentucky-licensed inspectors across Louisville and the Kentuckiana metro. <a href="/#pricing">See all prices</a>.</p>
         <div class="cta-actions">
           <a href="tel:3175370940" class="btn btn-primary">Call (317) 537-0940</a>
-          <a href="/#quote" class="btn btn-outline">Request a Free Quote</a>
+          <a href="#quote" class="btn btn-outline">Book Online</a>
         </div>
       </div>
 
@@ -157,6 +157,56 @@
         <li>The EPA action level is 4.0 pCi/L, and Jefferson, Oldham, and Bullitt Counties all sit in Zone 1.</li>
         <li>Mitigation systems typically run $800–$1,500 and can often be negotiated as a seller-paid repair.</li>
       </ul>
+
+      <div class="article-form">
+      <div class="hero-form-card" id="quote">
+        <div class="form-title">Book Your Louisville Home Inspection</div>
+        <div class="form-sub">Fixed prices from $299 · <a href="/#pricing">See all prices</a> · No obligation</div>
+        <form id="lead-form" novalidate>
+          <input type="hidden" name="access_key" value="625b0822-7db5-4e89-94fa-785d3c7cf370" />
+          <input type="hidden" name="subject" value="New Lead — Blog: Radon Testing Cost in Louisville: What to Expect and Why It's Worth It" />
+          <input type="hidden" name="redirect" value="false" />
+          <input type="hidden" name="source_page" value="/blog/radon-testing-cost-louisville" />
+          <div class="form-group">
+            <label for="name">Your Name *</label>
+            <input type="text" id="name" name="name" placeholder="John Smith" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" name="phone" placeholder="(502) 000-0000" required autocomplete="tel" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" placeholder="john@example.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="service">Inspection Type</label>
+            <select id="service" name="service">
+              <option value="">Select an inspection...</option>
+              <option>Full Home Inspection</option>
+              <option>Pre-Listing / Seller's Inspection</option>
+              <option>New Construction Inspection</option>
+              <option>Radon Testing</option>
+              <option>Termite / WDO Inspection</option>
+              <option>Sewer Scope Inspection</option>
+              <option>Commercial Property Inspection</option>
+              <option>Condo / Townhome Inspection</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">Tell us more (optional)</label>
+            <textarea id="message" name="message" placeholder="Property address, square footage, age of home, best time to call..."></textarea>
+          </div>
+          <button type="submit" class="form-submit">Request My Inspection →</button>
+          <div class="form-privacy">Your info is private and never shared.</div>
+        </form>
+        <div class="form-success" id="form-success">
+          <div class="check-big"></div>
+          <h3>Request Received!</h3>
+          <p>We'll call you back ASAP to confirm your inspection time. Check your phone!</p>
+        </div>
+      </div>
+      </div>
 
       <div class="related-posts">
         <h3>Related Articles</h3>
@@ -221,6 +271,33 @@
       </div>
     </div>
   </footer>
+
+  <div class="mobile-cta" role="navigation" aria-label="Contact">
+    <a href="tel:3175370940" class="mobile-cta-call">&#128222; Call Now</a>
+    <a href="#quote" class="mobile-cta-quote">Book Online</a>
+  </div>
+
+  <script>
+    (function(){
+      var form = document.getElementById('lead-form');
+      if (!form) return;
+      var label = 'Request My Inspection →';
+      var fail = function(btn) { btn.textContent = label; btn.disabled = false; alert('Something went wrong. Please call us directly at (317) 537-0940.'); };
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var btn = form.querySelector('.form-submit');
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+        fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(form) })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success) { form.style.display = 'none'; document.getElementById('form-success').style.display = 'block'; }
+            else { fail(btn); }
+          })
+          .catch(function() { fail(btn); });
+      });
+    })();
+  </script>
 
   <script>
     (function(){

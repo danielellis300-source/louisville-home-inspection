@@ -70,14 +70,14 @@ function renderHeader() {
       <a href="/" class="logo">Louisville<span>Home</span> Inspection Services</a>
       <div class="header-right">
         <div class="header-phone">Call us: <a href="tel:${config.phoneTel}">${config.phoneDisplay}</a></div>
-        <a href="/#quote" class="btn btn-primary">Free Quote</a>
+        <a href="/#quote" class="btn btn-primary">Book Now</a>
         <div class="menu-wrap">
           <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuDropdown">&#9776; Menu</button>
           <div class="menu-dropdown" id="menuDropdown" role="menu">
             <a href="/">Home</a>
             <a href="/#services">Services</a>
             <a href="/#areas">Service Areas</a>
-            <a href="/#quote">Get a Quote</a>
+            <a href="/#quote">Book Online</a>
             <a href="/blog/">Blog</a>
           </div>
         </div>
@@ -161,14 +161,190 @@ function renderMenuScript() {
   </script>`;
 }
 
+// ── Pricing ──────────────────────────────────────────────────
+// Published fixed prices (from site-config.js). Used on the homepage
+// (injected by generate.js between GENERATED:pricing markers) and on
+// every city page.
+function renderPricingSection() {
+  const p = config.pricing;
+  const row = (label, note, price) => `              <tr>
+                <td><span class="price-label">${escapeHtml(label)}</span>${note ? `<span class="price-sub">${escapeHtml(note)}</span>` : ''}</td>
+                <td class="price-amt">${escapeHtml(price)}</td>
+              </tr>`;
+  const tiers = p.homeTiers.map(t => row(t.size, t.note, t.price)).join('\n');
+  const addOns = p.addOns.map(a => row(a.name, a.note, a.price)).join('\n');
+  const included = p.included.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+  return `  <section class="section pricing-section" id="pricing">
+    <div class="container text-center">
+      <h2 class="section-title">Home Inspection Prices</h2>
+      <p class="section-sub">No quote call needed. Find your home's size, add any tests you want, and that's your price.</p>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <h3>Full Home Inspection</h3>
+          <p class="price-card-sub">Priced by finished square footage</p>
+          <table class="price-table">
+            <tbody>
+${tiers}
+            </tbody>
+          </table>
+        </div>
+        <div class="price-card">
+          <h3>Add-On Tests &amp; Visits</h3>
+          <p class="price-card-sub">Added to any inspection</p>
+          <table class="price-table">
+            <tbody>
+${addOns}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="price-included">
+        <strong>Included in every inspection:</strong>
+        <ul>${included}</ul>
+      </div>
+      <p class="price-fineprint">${escapeHtml(pricingFinePrint())}</p>
+      <div class="cta-actions price-actions">
+        <a href="tel:${config.phoneTel}" class="btn btn-primary">Call to Book: ${config.phoneDisplay}</a>
+        <a href="#quote" class="btn btn-outline-dark">Book Online</a>
+      </div>
+    </div>
+  </section>`;
+}
+
+// Plain-text version for FAQ answers (visible text and FAQPage schema).
+function addOnPrice(name) {
+  const a = config.pricing.addOns.find(x => x.name === name);
+  if (!a) throw new Error(`site-config.js pricing.addOns has no "${name}" entry`);
+  return a.price;
+}
+
+function pricingFinePrint() {
+  return config.pricing.fineprint.replace('{pre1940}', config.pricing.pre1940Surcharge);
+}
+
+// "$299 up to 1,200 sq ft, $349 up to 2,000 sq ft, ..." built from the
+// tier sizes, skipping the open-ended "Over ..." tier.
+function pricingFaqAnswer() {
+  const tiers = config.pricing.homeTiers
+    .map(t => ({ price: t.price, upTo: (t.size.match(/^(?:Up to |[\d,]+ – )([\d,]+) sq ft$/) || [])[1] }))
+    .filter(t => t.upTo);
+  const list = tiers.map(t => `${t.price} up to ${t.upTo} sq ft`);
+  const tierText = list.slice(0, -1).join(', ') + ', and ' + list[list.length - 1];
+  return `We charge fixed prices by finished square footage: ${tierText}. Homes built before 1940 add ${config.pricing.pre1940Surcharge}. Radon testing (${addOnPrice('Radon test')}), sewer scope (${addOnPrice('Sewer scope')}), and a termite/WDO report (${addOnPrice('Termite / WDO report')}) can be added. The price you see is the price you pay, with nothing added on site.`;
+}
+
+function radonFaqSentence() {
+  return `Added to an inspection, our radon test is a fixed ${addOnPrice('Radon test')}.`;
+}
+
+// ── Mobile call bar ─────────────────────────────────────────
+// Fixed to the bottom of the screen at phone widths (CSS hides it on
+// desktop). quoteHref is "#quote" on any page that has the lead form.
+function renderMobileCallBar(quoteHref = '#quote') {
+  return `  <div class="mobile-cta" role="navigation" aria-label="Contact">
+    <a href="tel:${config.phoneTel}" class="mobile-cta-call">&#128222; Call Now</a>
+    <a href="${quoteHref}" class="mobile-cta-quote">Book Online</a>
+  </div>`;
+}
+
+// ── Lead form ───────────────────────────────────────────────
+// Same fields and Web3Forms wiring as the homepage/city hero form.
+// Only one per page: ids (lead-form, form-success) are fixed.
+function renderLeadFormCard({ title, sub, subject, hidden = {} }) {
+  const extra = Object.entries(hidden)
+    .map(([k, v]) => `\n          <input type="hidden" name="${escapeHtml(k)}" value="${escapeHtml(v)}" />`)
+    .join('');
+  return `      <div class="hero-form-card" id="quote">
+        <div class="form-title">${escapeHtml(title)}</div>
+        <div class="form-sub">${sub}</div>
+        <form id="lead-form" novalidate>
+          <input type="hidden" name="access_key" value="${config.web3formsKey}" />
+          <input type="hidden" name="subject" value="${escapeHtml(subject)}" />
+          <input type="hidden" name="redirect" value="false" />${extra}
+          <div class="form-group">
+            <label for="name">Your Name *</label>
+            <input type="text" id="name" name="name" placeholder="John Smith" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" name="phone" placeholder="(502) 000-0000" required autocomplete="tel" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" placeholder="john@example.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="service">Inspection Type</label>
+            <select id="service" name="service">
+              <option value="">Select an inspection...</option>
+              <option>Full Home Inspection</option>
+              <option>Pre-Listing / Seller's Inspection</option>
+              <option>New Construction Inspection</option>
+              <option>Radon Testing</option>
+              <option>Termite / WDO Inspection</option>
+              <option>Sewer Scope Inspection</option>
+              <option>Commercial Property Inspection</option>
+              <option>Condo / Townhome Inspection</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">Tell us more (optional)</label>
+            <textarea id="message" name="message" placeholder="Property address, square footage, age of home, best time to call..."></textarea>
+          </div>
+          <button type="submit" class="form-submit">Request My Inspection →</button>
+          <div class="form-privacy">Your info is private and never shared.</div>
+        </form>
+        <div class="form-success" id="form-success">
+          <div class="check-big"></div>
+          <h3>Request Received!</h3>
+          <p>We'll call you back ASAP to confirm your inspection time. Check your phone!</p>
+        </div>
+      </div>`;
+}
+
+function renderLeadFormScript() {
+  return `  <script>
+    (function(){
+      var form = document.getElementById('lead-form');
+      if (!form) return;
+      var label = 'Request My Inspection →';
+      var fail = function(btn) { btn.textContent = label; btn.disabled = false; alert('Something went wrong. Please call us directly at ${config.phoneDisplay}.'); };
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var btn = form.querySelector('.form-submit');
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+        fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(form) })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success) { form.style.display = 'none'; document.getElementById('form-success').style.display = 'block'; }
+            else { fail(btn); }
+          })
+          .catch(function() { fail(btn); });
+      });
+    })();
+  </script>`;
+}
+
 function renderCta() {
   return `      <div class="article-cta">
-        <h3>Get a Free Inspection Quote</h3>
-        <p>Our <a href="/">Louisville home inspectors</a> serve ${escapeHtml(config.addressLocality)} and the Kentuckiana metro — call now or request a quote online.</p>
+        <h3>Need a Louisville Home Inspection?</h3>
+        <p>Fixed prices from ${config.pricing.homeTiers[0].price}, same-day reports, and Kentucky-licensed inspectors across ${escapeHtml(config.addressLocality)} and the Kentuckiana metro. <a href="/#pricing">See all prices</a>.</p>
         <div class="cta-actions">
           <a href="tel:${config.phoneTel}" class="btn btn-primary">Call ${config.phoneDisplay}</a>
-          <a href="/#quote" class="btn btn-outline">Request a Free Quote</a>
+          <a href="#quote" class="btn btn-outline">Book Online</a>
         </div>
+      </div>`;
+}
+
+function renderArticleForm(article) {
+  return `      <div class="article-form">
+${renderLeadFormCard({
+  title: 'Book Your Louisville Home Inspection',
+  sub: `Fixed prices from ${config.pricing.homeTiers[0].price} · <a href="/#pricing">See all prices</a> · No obligation`,
+  subject: `New Lead — Blog: ${article.title}`,
+  hidden: { source_page: `/blog/${article.slug}` }
+})}
       </div>`;
 }
 
@@ -279,12 +455,18 @@ ${renderBreadcrumb([
 
 ${renderArticleBody(article, articlesBySlug)}
 
+${renderArticleForm(article)}
+
 ${renderRelatedPosts(article, articlesBySlug)}
       </div>
     </div>
   </div>
 
 ${renderFooter()}
+
+${renderMobileCallBar()}
+
+${renderLeadFormScript()}
 
 ${renderMenuScript()}
 
@@ -361,6 +543,8 @@ ${cards}
 
 ${renderFooter()}
 
+${renderMobileCallBar('/#quote')}
+
 ${renderMenuScript()}
 
 </body>
@@ -368,4 +552,7 @@ ${renderMenuScript()}
 `;
 }
 
-module.exports = { renderArticlePage, renderBlogIndexPage, readTimeFor, formatDate, renderIconMeta };
+module.exports = {
+  renderArticlePage, renderBlogIndexPage, readTimeFor, formatDate, renderIconMeta,
+  renderPricingSection, pricingFaqAnswer, radonFaqSentence, renderMobileCallBar
+};

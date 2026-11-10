@@ -11,7 +11,7 @@ const path = require('path');
 const config = require('./site-config');
 const cityData = require('./city-data');
 const articles = require('./blog-data');
-const { renderIconMeta, readTimeFor } = require('./template');
+const { renderIconMeta, readTimeFor, renderPricingSection, pricingFaqAnswer, renderMobileCallBar } = require('./template');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -105,12 +105,12 @@ function disclosureCopy(region) {
 function renderCityPage(city) {
   const {
     slug, name, region, stateName, stateAbbr, county, countyLabel,
-    geo, hood, costRange, blurb1, blurb2, faqLocal
+    geo, hood, blurb1, blurb2, faqLocal
   } = city;
 
   const url = `${config.domain}/${slug}`;
   const title = `Home Inspection in ${name}, ${stateAbbr} | ${config.businessName} | ${config.phoneDisplay}`;
-  const metaDesc = `Certified home inspectors in ${name}, ${stateAbbr}. Serving ${countyLabel} and the Louisville metro. Same-day reports, upfront pricing. Free quote — call ${config.phoneDisplay}.`;
+  const metaDesc = `Certified home inspectors in ${name}, ${stateAbbr}. Serving ${countyLabel} and the Louisville metro. Same-day reports, fixed prices from ${config.pricing.homeTiers[0].price}. Call ${config.phoneDisplay}.`;
 
   const areaServed = nearbyCities(slug)
     .map(n => `      {"@type": "City", "name": ${JSON.stringify(n)}}`)
@@ -121,7 +121,7 @@ function renderCityPage(city) {
   const faqs = [
     {
       q: `How much does a home inspection cost in ${name}, ${stateAbbr}?`,
-      a: `Home inspections in ${name} typically range from ${costRange} depending on the size, age, and type of property. Add-on tests such as radon, sewer scope, and termite/WDO are priced separately. We always provide a firm, no-obligation quote before booking — call ${config.phoneDisplay}.`
+      a: `${pricingFaqAnswer()} ${name} homes are priced the same as everywhere else in our service area, with no travel fee.`
     },
     { q: faqLocal.q, a: faqLocal.a },
     { q: `How long does a home inspection take in ${name}?`, a: howLongAnswer }
@@ -232,14 +232,14 @@ ${localBusinessSchema}
       <a href="/" class="logo">Louisville<span>Home</span> Inspection Services</a>
       <div class="header-right">
         <div class="header-phone">Call us: <a href="tel:${config.phoneTel}">${config.phoneDisplay}</a></div>
-        <a href="#quote" class="btn btn-primary">Free Quote</a>
+        <a href="#quote" class="btn btn-primary">Book Now</a>
         <div class="menu-wrap">
           <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuDropdown">&#9776; Menu</button>
           <div class="menu-dropdown" id="menuDropdown" role="menu">
             <a href="/">Home</a>
             <a href="/#services">Services</a>
             <a href="/#areas">Service Areas</a>
-            <a href="#quote">Get a Quote</a>
+            <a href="#quote">Book Online</a>
             <a href="/blog/">Blog</a>
           </div>
         </div>
@@ -265,18 +265,18 @@ ${localBusinessSchema}
           <a href="tel:${config.phoneTel}" class="btn btn-primary" style="font-size:1.1rem; padding:17px 28px;">
             Call ${config.phoneDisplay}
           </a>
-          <a href="#quote" class="btn btn-outline">Get Free Quote Online</a>
+          <a href="#quote" class="btn btn-outline">Book Online</a>
         </div>
         <div class="trust-row">
           <div class="trust-item">Same-Day Reports</div>
           <div class="trust-item">Upfront Pricing</div>
           <div class="trust-item">7 Days/Wk Scheduling</div>
-          <div class="trust-item">Free Quotes</div>
+          <div class="trust-item">No Hidden Fees</div>
         </div>
       </div>
       <div class="hero-form-card" id="quote">
-        <div class="form-title">Get Your Free ${escapeHtml(name)} Quote</div>
-        <div class="form-sub">We respond fast · No obligation, no pressure</div>
+        <div class="form-title">Book Your ${escapeHtml(name)} Inspection</div>
+        <div class="form-sub">Fixed prices from ${config.pricing.homeTiers[0].price} · We confirm your time fast</div>
         <form id="lead-form" novalidate>
           <input type="hidden" name="access_key" value="${config.web3formsKey}" />
           <input type="hidden" name="subject" value="New Lead — ${escapeHtml(name)} Home Inspection" />
@@ -312,13 +312,13 @@ ${localBusinessSchema}
             <label for="message">Tell us more (optional)</label>
             <textarea id="message" name="message" placeholder="Property address, square footage, age of home, best time to call..."></textarea>
           </div>
-          <button type="submit" class="form-submit">Send My Free Quote Request →</button>
+          <button type="submit" class="form-submit">Request My Inspection →</button>
           <div class="form-privacy">Your info is private and never shared.</div>
         </form>
         <div class="form-success" id="form-success">
           <div class="check-big"></div>
           <h3>Request Received!</h3>
-          <p>We'll call you back ASAP to confirm your free quote. Check your phone!</p>
+          <p>We'll call you back ASAP to confirm your inspection time. Check your phone!</p>
         </div>
       </div>
     </div>
@@ -333,7 +333,7 @@ ${localBusinessSchema}
         <div class="stat-divider"></div>
         <div class="stat-item"><span class="stat-num">7 Days/Wk</span><span class="stat-label">Evening &amp; Weekend Availability</span></div>
         <div class="stat-divider"></div>
-        <div class="stat-item"><span class="stat-num">$0</span><span class="stat-label">Cost For A Quote</span></div>
+        <div class="stat-item"><span class="stat-num">From ${config.pricing.homeTiers[0].price}</span><span class="stat-label">Fixed, Published Prices</span></div>
       </div>
     </div>
   </div>
@@ -376,6 +376,8 @@ ${localBusinessSchema}
       </div>
     </div>
   </section>
+
+${renderPricingSection()}
 
   <section class="section about-city">
     <div class="container">
@@ -471,7 +473,7 @@ ${renderHelpfulGuides()}
       <p>Call now to book a certified home inspection in ${escapeHtml(name)}, ${stateAbbr}. Fast scheduling, same-day reports, zero hassle.</p>
       <div class="cta-actions">
         <a href="tel:${config.phoneTel}" class="btn btn-white" style="font-size:1.08rem; padding:17px 32px;">Call ${config.phoneDisplay}</a>
-        <a href="#quote" class="btn btn-outline">Request Online Quote</a>
+        <a href="#quote" class="btn btn-outline">Book Online</a>
       </div>
     </div>
   </section>
@@ -513,6 +515,8 @@ ${renderFooterAreas()}
     </div>
   </footer>
 
+${renderMobileCallBar()}
+
   <script>
     document.querySelectorAll('.faq-question').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -535,9 +539,9 @@ ${renderFooterAreas()}
         .then(function(res) { return res.json(); })
         .then(function(data) {
           if (data.success) { form.style.display = 'none'; document.getElementById('form-success').style.display = 'block'; }
-          else { btn.textContent = 'Send My Free Quote Request →'; btn.disabled = false; alert('Something went wrong. Please call us directly at ${config.phoneDisplay}.'); }
+          else { btn.textContent = 'Request My Inspection →'; btn.disabled = false; alert('Something went wrong. Please call us directly at ${config.phoneDisplay}.'); }
         })
-        .catch(function() { btn.textContent = 'Send My Free Quote Request →'; btn.disabled = false; alert('Something went wrong. Please call us directly at ${config.phoneDisplay}.'); });
+        .catch(function() { btn.textContent = 'Request My Inspection →'; btn.disabled = false; alert('Something went wrong. Please call us directly at ${config.phoneDisplay}.'); });
     });
     document.querySelectorAll('a[href^="#"]').forEach(function(a) {
       a.addEventListener('click', function(e) {
